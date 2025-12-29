@@ -12,7 +12,7 @@ jobs:
     steps:
       # 저장소 코드 다운로드
       - name: Checkout Code
-        uses: actions/checkout@5
+        uses: actions/checkout@v5
       # pnpm 설치
       - name: Install pnpm
         uses: pnpm/action-setup@v4
