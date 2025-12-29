@@ -1,0 +1,55 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 저장소 코드 다운로드
+      - name: Checkout Code
+        uses: actions/checkout@6
+      # pnpm 설치
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      # node.js 환경 설정
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+          cache: "pnpm" # 캐싱해놓은 패키지 관리자
+      # 라이브러리 설치
+      - name: Install dependencies
+        run: pnpm install # 락파일이 없어도 의존성 설치 가능
+      # 프로젝트 빌드
+      - name: Build project
+        id: build_step
+        run: pnpm build
+        continue-on-error: true
+      # 빌드 결과
+      - name: Output build result
+        if: always()
+        run: |
+          echo "### 🚀 빌드 결과 " >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.build_step.outcome }}" == "success" ]; then
+            echo "** 빌드 성공 ✅ **" >> $GIHUB_STEP_SUMMARY
+          else
+            echo "** 빌드 실패 ❌ **" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: auto-assign-author-and-reviewer
+        if: github.event_name == 'pull_request'&&github.event.action=='opened'
+        uses: kentaro-m/auto-assign-action@v2.0.0
+        with:
+          assignees: ${{github.actor}} # 담당자 설정
+          # reviewers: a, b, c (리뷰어를 자동 설정합니다)
