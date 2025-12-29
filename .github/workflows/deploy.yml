@@ -36,17 +36,25 @@ jobs:
         id: build_step
         run: pnpm build
         continue-on-error: true
+
       # 빌드 결과
       - name: Output build result
-        if: always()
-        run: |
-          echo "### 🚀 빌드 결과 " >> $GITHUB_STEP_SUMMARY
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: build-result
+          message: |
+            ### 🚀 빌드 결과
+            ${{ steps.build_step.outcome == 'success' && '✅ **빌드 성공**' || '❌ **빌드 실패**' }}
 
-          if [ "${{ steps.build_step.outcome }}" == "success" ]; then
-            echo "**빌드 성공 ✅**" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "**빌드 실패 ❌**" >> $GITHUB_STEP_SUMMARY
-          fi
+            <details>
+              <summary>로그 확인하기</summary>
+              [Actions 탭에서 자세히 보기](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            </details>
+
+      - name: Check Build Status
+        if: steps.build_step.outcome == 'failure'
+        run: exit 1
   assign:
     runs-on: ubuntu-latest
     steps:
