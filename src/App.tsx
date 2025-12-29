@@ -12,7 +12,7 @@ function App() {
       >
         카운트 값 : {count}
       </button>
-      <div>안녕하세요</div>
+      <div>안녕하세요 반갑습니다 ✨</div>
     </div>
   );
 }
