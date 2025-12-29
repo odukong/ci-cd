@@ -71,7 +71,7 @@ jobs:
             COLOR=15158332 
             TITLE="❌ 빌드 실패"
 
-          DESCRIPTION="**🚀 Title:** `${PR_TITLE}`\n **🎯 Event:** `${PR_ACTION}`\n **👤작성자:** `${PR_USER}`\n\n**[🔎PR보러가기]`${PR_URL}`**"
+          DESCRIPTION="**🚀 Title:** $PR_TITLE\n **🎯 Event:** $PR_ACTION`\n **👤작성자:** $PR_USER\n\n**[🔎PR보러가기]($PR_URL)**"
           curl -H "Content-Type: application/json" \
                -d "{
                  \"embeds\": [{
