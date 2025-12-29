@@ -55,6 +55,33 @@ jobs:
               </a>
             </details>
 
+      # 빌드 결과 디스코드 알람 보내기
+      - name: Notify Discord Alarm
+        if: github.event_name == 'pull_request' && always()
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_ACTION="${{ github.event.action }}"
+          PR_USER="${{ github.event.pull_request.user.login }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+
+          if [ "${{ steps.build_step.outcome }}" == "success" ]; then
+            COLOR=3066993  
+            TITLE="✅ 빌드 성공"
+          else
+            COLOR=15158332 
+            TITLE="❌ 빌드 실패"
+
+          DESCRIPTION="**🚀 Title:** `${PR_TITLE}`\n **🎯 Event:** `${PR_ACTION}`\n **👤작성자:** `${PR_USER}`\n\n**[🔎PR보러가기]`${PR_URL}`**"
+          curl -H "Content-Type: application/json" \
+               -d "{
+                 \"embeds\": [{
+                   \"title\": \"$TITLE\",
+                   \"description\": \"$DESCRIPTION\",
+                   \"color\": $COLOR
+                 }]
+               }" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
+      # 빌드 실패 시, 종료
       - name: Check Build Status
         if: steps.build_step.outcome == 'failure'
         run: exit 1
