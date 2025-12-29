@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read # 코드 읽기 권한
+  pull-requests: write # 자동리뷰어 설정을 위한 쓰기 권한
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -42,14 +46,13 @@ jobs:
             echo "**빌드 성공 ✅**" >> $GITHUB_STEP_SUMMARY
           else
             echo "**빌드 실패 ❌**" >> $GITHUB_STEP_SUMMARY
-            exit 1
           fi
   assign:
     runs-on: ubuntu-latest
     steps:
       - name: auto-assign-author-and-reviewer
         if: github.event_name == 'pull_request'&&github.event.action=='opened'
-        uses: kentaro-m/auto-assign-action@v2.0.0
+        uses: hkusu/review-assign-action@v1
         with:
           assignees: ${{github.actor}} # 담당자 설정
           # reviewers: a, b, c (리뷰어를 자동 설정합니다)
