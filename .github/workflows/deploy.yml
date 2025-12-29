@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read # 코드 읽기 권한
+  pull-requests: write # 자동리뷰어 설정을 위한 쓰기 권한
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -32,24 +36,61 @@ jobs:
         id: build_step
         run: pnpm build
         continue-on-error: true
+
       # 빌드 결과
       - name: Output build result
-        if: always()
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: build-result
+          message: |
+            ### 🚀 빌드 결과
+            ${{ steps.build_step.outcome == 'success' && '✅ **빌드 성공**' || '❌ **빌드 실패**' }}
+
+            <details>
+              <summary>로그 확인하기</summary>
+              <br> 
+              <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">
+                Actions 탭에서 자세히 보기
+              </a>
+            </details>
+
+      # 빌드 결과 디스코드 알람 보내기
+      - name: Notify Discord Alarm
+        if: github.event_name == 'pull_request' && always()
         run: |
-          echo "### 🚀 빌드 결과 " >> $GITHUB_STEP_SUMMARY
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_ACTION="${{ github.event.action }}"
+          PR_USER="${{ github.event.pull_request.user.login }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
 
           if [ "${{ steps.build_step.outcome }}" == "success" ]; then
-            echo "**빌드 성공 ✅**" >> $GITHUB_STEP_SUMMARY
+            COLOR=3066993  
+            TITLE="✅ 빌드 성공"
           else
-            echo "**빌드 실패 ❌**" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+            COLOR=15158332 
+            TITLE="❌ 빌드 실패"
+
+          DESCRIPTION="**🚀 Title:** $PR_TITLE\n **🎯 Event:** $PR_ACTION`\n **👤작성자:** $PR_USER\n\n**[🔎PR보러가기]($PR_URL)**"
+          curl -H "Content-Type: application/json" \
+               -d "{
+                 \"embeds\": [{
+                   \"title\": \"$TITLE\",
+                   \"description\": \"$DESCRIPTION\",
+                   \"color\": $COLOR
+                 }]
+               }" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
+      # 빌드 실패 시, 종료
+      - name: Check Build Status
+        if: steps.build_step.outcome == 'failure'
+        run: exit 1
   assign:
     runs-on: ubuntu-latest
     steps:
       - name: auto-assign-author-and-reviewer
         if: github.event_name == 'pull_request'&&github.event.action=='opened'
-        uses: kentaro-m/auto-assign-action@v2.0.0
+        uses: hkusu/review-assign-action@v1
         with:
           assignees: ${{github.actor}} # 담당자 설정
           # reviewers: a, b, c (리뷰어를 자동 설정합니다)
