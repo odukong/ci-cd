@@ -10,7 +10,7 @@ function App() {
           setCount((prev) => prev + 1);
         }}
       >
-        카운트 값 : {count}
+        카운트 값 : {counts}
       </button>
     </div>
   );
