@@ -2,7 +2,7 @@ import { useState } from "react";
 
 function App() {
   const [count, setCount] = useState(0);
-
+  console.log(sd);
   return (
     <div>
       <button
@@ -12,6 +12,7 @@ function App() {
       >
         카운트 값 : {count}
       </button>
+      <div>안녕하세요</div>
     </div>
   );
 }
