@@ -49,7 +49,10 @@ jobs:
 
             <details>
               <summary>로그 확인하기</summary>
-              [Actions 탭에서 자세히 보기](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              <br> 
+              <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">
+                Actions 탭에서 자세히 보기
+              </a>
             </details>
 
       - name: Check Build Status
