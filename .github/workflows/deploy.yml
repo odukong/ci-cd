@@ -39,7 +39,7 @@ jobs:
           echo "### 🚀 빌드 결과 " >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ steps.build_step.outcome }}" == "success" ]; then
-            echo "** 빌드 성공 ✅ **" >> $GIHUB_STEP_SUMMARY
+            echo "** 빌드 성공 ✅ **" >> $GITHUB_STEP_SUMMARY
           else
             echo "** 빌드 실패 ❌ **" >> $GITHUB_STEP_SUMMARY
             exit 1
