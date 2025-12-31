@@ -24,22 +24,12 @@ jobs:
         with:
           version: 10
 
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
       # node.js 환경 설정
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: "22.x"
-          # cache: "pnpm" # 캐싱해놓은 패키지 관리자
+          cache: "pnpm" # 캐싱해놓은 패키지 관리자
       # 라이브러리 설치
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
