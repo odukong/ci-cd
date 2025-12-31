@@ -1,10 +1,11 @@
-name: deploy
+# 전체 배포 코드
+name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 permissions:
   contents: read # 코드 읽기 권한
@@ -24,17 +25,21 @@ jobs:
           version: 10
       # node.js 환경 설정
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v5
         with:
           node-version: "22.x"
-          cache: "pnpm" # 캐싱해놓은 패키지 관리자
+          # cache: "pnpm" # 캐싱해놓은 패키지 관리자
       # 라이브러리 설치
       - name: Install dependencies
-        run: pnpm install # 락파일이 없어도 의존성 설치 가능
+        run: pnpm install --frozen-lockfile
+      # 프로젝트 린트 검사 및 타입 검사
+      - name: Check project
+        id: check_step
+        run: pnpm run lint && pnpm type-check
       # 프로젝트 빌드
       - name: Build project
         id: build_step
-        run: pnpm build
+        run: pnpm run build
         continue-on-error: true
 
       # 빌드 결과
@@ -45,6 +50,7 @@ jobs:
           header: build-result
           message: |
             ### 🚀 빌드 결과
+            ${{ steps.check_step.outcome == 'success' && '✅ **린트 검사 완료**' || '❌ **린트 검사 실패**'}}
             ${{ steps.build_step.outcome == 'success' && '✅ **빌드 성공**' || '❌ **빌드 실패**' }}
 
             <details>
