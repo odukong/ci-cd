@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: "22.x"
-          # cache: "pnpm" # 캐싱해놓은 패키지 관리자
+          cache: "pnpm" # 캐싱해놓은 패키지 관리자
       # 라이브러리 설치
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
