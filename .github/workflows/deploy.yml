@@ -35,7 +35,7 @@ jobs:
       # 프로젝트 린트 검사 및 타입 검사
       - name: Check project
         id: check_step
-        run: pnpm run lint && pnpm type-check
+        run: pnpm run lint && pnpm exec tsc --noEmit
       # 프로젝트 빌드
       - name: Build project
         id: build_step
