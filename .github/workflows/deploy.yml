@@ -1,10 +1,11 @@
-name: deploy
+# 전체 배포 코드
+name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 permissions:
   contents: read # 코드 읽기 권한
@@ -22,19 +23,34 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 10
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
       # node.js 환경 설정
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v5
         with:
           node-version: "22.x"
-          cache: "pnpm" # 캐싱해놓은 패키지 관리자
+          # cache: "pnpm" # 캐싱해놓은 패키지 관리자
       # 라이브러리 설치
       - name: Install dependencies
-        run: pnpm install # 락파일이 없어도 의존성 설치 가능
+        run: pnpm install --frozen-lockfile
+      # 프로젝트 린트 검사 및 타입 검사
+      - name: Check project
+        id: check_step
+        run: pnpm run lint && pnpm exec tsc --noEmit
       # 프로젝트 빌드
       - name: Build project
         id: build_step
-        run: pnpm build
+        run: pnpm run build
         continue-on-error: true
 
       # 빌드 결과
@@ -45,6 +61,7 @@ jobs:
           header: build-result
           message: |
             ### 🚀 빌드 결과
+            ${{ steps.check_step.outcome == 'success' && '✅ **린트 검사 완료**' || '❌ **린트 검사 실패**'}}
             ${{ steps.build_step.outcome == 'success' && '✅ **빌드 성공**' || '❌ **빌드 실패**' }}
 
             <details>
@@ -60,7 +77,6 @@ jobs:
         if: github.event_name == 'pull_request' && always()
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_ACTION="${{ github.event_name }}"
           PR_USER="${{ github.event.pull_request.user.login }}"
           PR_URL="${{ github.event.pull_request.html_url }}"
 
@@ -72,7 +88,7 @@ jobs:
             TITLE="❌ 빌드 실패"
           fi
 
-          DESCRIPTION="**🚀 Title:** \`$PR_TITLE\`\n **🎯 Event:** \`$PR_ACTION\`\n **👤작성자:** \`$PR_USER\`\n\n**[🔎PR보러가기]($PR_URL)**"
+          DESCRIPTION="**🚀 Title :** \`$PR_TITLE\`\n **👤작성자 :** \`$PR_USER\`\n\n**[🔎 PR보러가기]($PR_URL)**"
           curl -H "Content-Type: application/json" \
                -d "{
                  \"embeds\": [{
